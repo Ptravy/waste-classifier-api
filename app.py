@@ -8,12 +8,10 @@ import time
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app)  # Mengizinkan akses dari frontend lain (misalnya GitHub Pages)
+CORS(app)
 
-# Load model dari lokal
-model = load_model("model.h5")  # Ganti sesuai nama file model kamu
+model = load_model("sampahlaut.h5")
 
-# Fungsi prediksi
 def predict_image(image_bytes):
     img = Image.open(io.BytesIO(image_bytes)).resize((224, 224))
     img_array = np.array(img) / 255.0
@@ -30,7 +28,7 @@ def predict_image(image_bytes):
         confidence = 1 - prediction
 
     prediction_percentage = confidence * 100
-    threshold = 60  # % ambang batas minimal keyakinan model
+    threshold = 60
 
     if prediction_percentage < threshold:
         label = "Bukan Sampah Laut"
@@ -56,16 +54,9 @@ def predict():
         image_bytes = file.read()
 
         if file.content_type not in ['image/jpeg', 'image/png']:
-            return jsonify({'error': 'File harus berupa gambar JPEG atau PNG.'}), 400
+            return jsonify({'error': 'Format gambar harus JPG/PNG.'}), 400
 
         label, img_str, prediction_percentage, prediction_time = predict_image(image_bytes)
-
-        if label == "Bukan Sampah Laut":
-            return jsonify({
-                'prediction': label,
-                'prediction_percentage': f'{prediction_percentage:.2f}%',
-                'prediction_time': f'{prediction_time:.2f} s'
-            }), 200
 
         return jsonify({
             'prediction': label,
@@ -73,6 +64,7 @@ def predict():
             'prediction_percentage': f'{prediction_percentage:.2f}%',
             'prediction_time': f'{prediction_time:.2f} s'
         })
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
